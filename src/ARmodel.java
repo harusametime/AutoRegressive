@@ -32,7 +32,6 @@ public class ARmodel {
 		}
 		average = average / (data.size() - n -start);
 
-		// cの初期化
 		c = new double[n];
 		for (int j = 0; j < n; j++) {
 			for (int i = start + n; i < data.size(); i++) {
@@ -43,7 +42,6 @@ public class ARmodel {
 		}
 
 
-		// omegaを求めるための係数行列Aと定数項b
 		double[][] A = new double[n - 1][n - 1];
 		double[] b = new double[n - 1];
 
@@ -57,7 +55,6 @@ public class ARmodel {
 			}
 		}
 
-		// 連立方程式をといてomegaをもとめる。
 		GaussJordan.GaussJordanElimination gauss = new GaussJordan.GaussJordanElimination(
 				A, b);
 		omega = new double[n - 1];
@@ -82,7 +79,7 @@ public class ARmodel {
 		double p = 0;
 		double xi = 0;
 		if (omega.length < 1) {
-			System.out.print("ARモデルの学習が済んでいないか、0次のARモデルです。");
+			System.out.print("Error: AR model fitting is not completed or 0-order AR model is specified.");
 			System.exit(0);
 		}
 
@@ -97,61 +94,6 @@ public class ARmodel {
 		// System.out.println(average + " " + variance + " " + xi);
 
 		return p;
-	}
-
-	public ArrayList<Access> readAccess() {
-
-		ArrayList<Access> temp = new ArrayList<Access>();
-
-		// 読み込むファイルの名前
-		String inputFileName = "access.txt";
-
-		// ファイルオブジェクトの生成
-		File inputFile = new File(inputFileName);
-
-		try {
-			// 入力ストリームの生成
-			FileInputStream fis = new FileInputStream(inputFile);
-			InputStreamReader isr = new InputStreamReader(fis);
-			BufferedReader br = new BufferedReader(isr);
-
-			// テキストファイルからの読み込み
-			String msg;
-			while ((msg = br.readLine()) != null) {
-				String[] line = msg.split("\t");
-				Access data = new Access();
-				data.show = Integer.valueOf(line[0]);
-				data.search = Integer.valueOf(line[1]);
-				temp.add(data);
-			}
-
-			// 後始末
-			br.close();
-
-			// エラーがあった場合は、スタックトレースを出力
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return temp;
-	}
-
-	public double getAverage(int i, int n, ArrayList<Double> data,
-			ArrayList<Access> access) {
-
-		double sum = 0;
-		int count = 0;
-	
-		if (count < 0) {
-			ok++;
-			return sum / count;
-		} else {
-			for (int j = n; j < data.size(); j++) {
-				sum += data.get(j);
-			}
-			ng++;
-			return sum / (data.size() - n);
-		}
 	}
 
 	public double estimate(ArrayList<Double> data, double n) {
