@@ -10,35 +10,34 @@ public class main {
 
 
 		/*****************************
-		 * ÀŒ±ƒf[ƒ^‚Ì“Ç‚İ‚İ
+		 * Read data
 		 *****************************/
 
 		ArrayList<Double> textdata = new ArrayList<Double>();
 		readData(textdata);
 
 		/*****************************
-		 * ’¼‹ß‚ÌT‚ÌˆÚ“®•½‹Ï‚Å•Ï‰»“_‚ğŒŸo‚·‚éB iT=1‚¾‚ÆˆÚ“®•½‹Ï‚ğ‚Æ‚ç‚È‚¢BT>0j
+		 * Length to calculate Moving Averageï¼ˆMoving average is not considered when T=1.ï¼‰
 		 *****************************/
 
 		int T = 1;
 
 		/*****************************
-		 * ARƒ‚ƒfƒ‹‚Ì‚½‚ß‚Ìƒpƒ‰ƒ[ƒ^
+		 * Order of AR model = n-1
 		 *****************************/
-
-		// (n-1)Ÿ‚ÌARƒ‚ƒfƒ‹‚Æ‚µ‚Ä„’è‚·‚éB
 		int n = 2;
 		
 		
 		/*****************************
-		 *  t ‚Å’€Ÿ“Ç‚İ‚İAƒf[ƒ^‚Ì–Ş“x‚ğŒvZ‚·‚éB
+		 * Calculate Likelihood of exch data at time t
+		 * with past data 
 		 *****************************/
-		for (int t = 1; t < textdata.size(); t++) { // ARƒ‚ƒfƒ‹—p‚É­‚È‚­‚Æ‚àt=1‚©‚ç
+		for (int t = 1; t < textdata.size(); t++) {
 
-			// –Ş“x‚ğŒvZ‚µ‚½‚¢ÅV‚Ìƒf[ƒ^
+			// Latest data whose likelihood is to be calculated 
 			double newdata = textdata.get(t);
 
-			// —˜—p‚·‚é‰ß‹‚Ìƒf[ƒ^
+			// Past data for determining AR coefficients
 			ArrayList<Double> data = new ArrayList<Double>();
 			
 			for (int i = 0; i < t; i++) {
@@ -47,30 +46,26 @@ public class main {
 			
 
 
-			// (n-1)Ÿ‚ÌARƒ‚ƒfƒ‹‚É‚ÍA(t-1)ŒÂ‚Ì‰ß‹ƒf[ƒ^‚ª(n-1)ŒÂˆÈã•K—v
+			// For (n-1) order AR model, we need more than n data for t 
 			if (n + 1 >= t) {
 				continue;
 			}
 
 			double p = 0;
 
-			// ARƒ‚ƒfƒ‹‚Å–Ş“x‚ğ‹‚ß‚é
-			// ARƒ‚ƒfƒ‹
+			// Fitting AR model to past data
 			ARmodel model = new ARmodel();
-			
-			// ARƒ‚ƒfƒ‹‚ÌŠwK
 			model.learn(data, n, 1);
 
-			// ARƒ‚ƒfƒ‹‚©‚çŠm—¦‚Ì“±o
-			// newdata‚É‘Î‚·‚éŠm—¦–§“xp‚ğ‹‚ß‚é
+			// Calculate probability p for the latest data
 			p = model.getProbablity(newdata, data);
 
-			// –Ş“xsc‚ğ-log p ‚Å‹‚ß‚ÄAhist_sc‚ğXV‚·‚éB
+			// Calculate log likelihood 
 			double sc = -Math.log(p);
 
 
-			// ˆÚ“®•½‹Ï‚ğ‹‚ß‚é‚Ì‚É•K—v‚Èƒf[ƒ^”‚ª‚È‚¢
-			// ‰ß‹‚Ìƒf[ƒ^T{ÅV‚Ìƒf[ƒ^n-1ŒÂ‚ª•K—v
+			// In case of fewer data for T, 
+			// 
 			if (t < T + n + 1) {
 				continue;
 			}
@@ -79,91 +74,28 @@ public class main {
 	}
 
 	public static void readData(ArrayList<Double> data) {
-		// “Ç‚İ‚Şƒtƒ@ƒCƒ‹‚Ì–¼‘O
+		// File name to be read
+		// Text file consits of N row/1 column
 		String inputFileName = "data.txt";
-
-		// ƒtƒ@ƒCƒ‹ƒIƒuƒWƒFƒNƒg‚Ì¶¬
+		
+		// Read file
 		File inputFile = new File(inputFileName);
-
 		try {
-			// “ü—ÍƒXƒgƒŠ[ƒ€‚Ì¶¬
 			FileInputStream fis = new FileInputStream(inputFile);
 			InputStreamReader isr = new InputStreamReader(fis);
 			BufferedReader br = new BufferedReader(isr);
 
-			// ƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚©‚ç‚Ì“Ç‚İ‚İ
 			String msg;
 			while ((msg = br.readLine()) != null) {
 				data.add(Double.parseDouble(msg));
 			}
 
-			// Œãn––
 			br.close();
 
-			// ƒGƒ‰[‚ª‚ ‚Á‚½ê‡‚ÍAƒXƒ^ƒbƒNƒgƒŒ[ƒX‚ğo—Í
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-	}
-
-	public static double getAverage(int i, ArrayList<Double> data) {
-
-		ArrayList<Access> access = new ArrayList<Access>();
-		access = readAccess();
-
-		double sum = 0;
-		int count = 0;
-		for (int j = 0; j < i; j++) {
-			if (access.get(i).show == access.get(j).show
-					&& access.get(i).search == access.get(j).search) {
-				sum += data.get(j);
-				count++;
-				break;
-			}
-		}
-		if (count > 0) {
-			return sum / count;
-		} else {
-			return 0;
-		}
-	}
-
-	public static ArrayList<Access> readAccess() {
-
-		ArrayList<Access> temp = new ArrayList<Access>();
-
-		// “Ç‚İ‚Şƒtƒ@ƒCƒ‹‚Ì–¼‘O
-		String inputFileName = "access.txt";
-
-		// ƒtƒ@ƒCƒ‹ƒIƒuƒWƒFƒNƒg‚Ì¶¬
-		File inputFile = new File(inputFileName);
-
-		try {
-			// “ü—ÍƒXƒgƒŠ[ƒ€‚Ì¶¬
-			FileInputStream fis = new FileInputStream(inputFile);
-			InputStreamReader isr = new InputStreamReader(fis);
-			BufferedReader br = new BufferedReader(isr);
-
-			// ƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚©‚ç‚Ì“Ç‚İ‚İ
-			String msg;
-			while ((msg = br.readLine()) != null) {
-				String[] line = msg.split("\t");
-				Access data = new Access();
-				data.show = Integer.valueOf(line[0]);
-				data.search = Integer.valueOf(line[1]);
-				temp.add(data);
-			}
-
-			// Œãn––
-			br.close();
-
-			// ƒGƒ‰[‚ª‚ ‚Á‚½ê‡‚ÍAƒXƒ^ƒbƒNƒgƒŒ[ƒX‚ğo—Í
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return temp;
 	}
 
 }
